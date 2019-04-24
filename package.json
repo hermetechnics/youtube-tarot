@@ -1,0 +1,23 @@
+{
+  "name": "youtube-tarot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakubfiala/youtube-tarot.git"
+  },
+  "author": "Jakub Fiala",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jakubfiala/youtube-tarot/issues"
+  },
+  "homepage": "https://github.com/jakubfiala/youtube-tarot#readme",
+  "dependencies": {
+    "google-auth-library": "^3.1.2",
+    "googleapis": "^39.2.0"
+  }
+}
