@@ -1,10 +1,8 @@
 const YOLO_MODEL_URL = chrome.runtime.getURL('models/yolo/model2.json');
 
 const DELAY_AFTER_IDLE = 0;
-const STYLE_RATIO = 0.1;
+const STYLE_RATIO = 0.05;
 const YOLO_CANVAS_SIZE = 416;
-
-const UNIT_BBOX = { top: YOLO_CANVAS_SIZE / 2, left: YOLO_CANVAS_SIZE / 2, bottom: YOLO_CANVAS_SIZE / 2, right: YOLO_CANVAS_SIZE / 2 };
 
 let model;
 let styleTransfer = null;
@@ -71,13 +69,15 @@ const loadImage = async src => {
     scalingCanvas.height = height * scalingFactor;
     
     const context = scalingCanvas.getContext('2d');
-    context.putImageData(imageData, 0, 0);
+    context.fillRect(0, 0, scalingCanvas.width, scalingCanvas.height);
     context.scale(scalingFactor, scalingFactor);
+    context.putImageData(imageData, 0, 0);
+
     return { yolo: context.getImageData(0, 0, width, YOLO_CANVAS_SIZE), full: imageData };
 }
 
 const cropImage = (img) => {
-    const size = Math.min(img.shape[0], img.shape[1]);
+    const size = Math.min(img.shape[0], img.shape[1]);  
     const centerHeight = img.shape[0] / 2;
     const beginHeight = centerHeight - (size / 2);
     const centerWidth = img.shape[1] / 2;
@@ -97,11 +97,12 @@ const joinBoundingBoxes = (jointBox, currentBox) => {
 
 const yoloBBoxToImageBBox = (yoloBBox, width, height) => {
     const sideOffset = (width - height) / 2;
+
     return {
         top: yoloBBox.top / YOLO_CANVAS_SIZE * height,
         left: yoloBBox.left / YOLO_CANVAS_SIZE * height + sideOffset,
-        bottom: Math.min(yoloBBox.bottom / YOLO_CANVAS_SIZE,  YOLO_CANVAS_SIZE / height) * height,
-        right: yoloBBox.right / YOLO_CANVAS_SIZE * height + sideOffset
+        bottom: Math.min(yoloBBox.bottom / YOLO_CANVAS_SIZE * height, 360),
+        right: Math.min(yoloBBox.right / YOLO_CANVAS_SIZE * height + sideOffset, 480)
     };
 };
 
@@ -115,7 +116,7 @@ const chooseObjects = (detectedObjects) => {
         const label = `${numberToWord[freq - 1]} of ${singleLabel}s`;
 
         const chosenObjects = detectedObjects.filter(o => o.className === singleLabel);
-        const bbox = chosenObjects.reduce(joinBoundingBoxes, UNIT_BBOX);
+        const bbox = chosenObjects.reduce(joinBoundingBoxes, chosenObjects[0]);
 
         return [label, bbox];
 
@@ -126,7 +127,7 @@ const chooseObjects = (detectedObjects) => {
         let label = chosenObjects.map(o => o.className).join(' & ');
         if (!label.includes('&')) label = `the ${label}`;
 
-        const bbox = chosenObjects.reduce(joinBoundingBoxes, UNIT_BBOX);
+        const bbox = chosenObjects.reduce(joinBoundingBoxes, chosenObjects[0]);
 
         return [label, bbox];
     }
@@ -157,8 +158,8 @@ const renderTarotCard = async (container, recommendation) => {
     container.appendChild(cardContainer);
 
     const [label, bbox] = chooseObjects(detectedObjects);  
+    console.log('YOLO BBOX', bbox);
     const imageBBox = yoloBBoxToImageBBox(bbox, image.full.width, image.full.height);
-    console.log(label, imageBBox);  
     
     const cardLabel = document.createElement('h3');
     cardLabel.classList.add('tarot-card__label');
@@ -174,21 +175,28 @@ const renderTarotCard = async (container, recommendation) => {
     cardImage.height = image.full.height;
     cardImageContainer.appendChild(cardImage);
 
+    const cardImageContext = cardImage.getContext('2d');
+    cardImageContext.fillRect(0, 0, cardImage.width, cardImage.height);
     
-    const cardImageData = new ImageData(cardImage.width, cardImage.height);
     await styleTransfer.style(image.full, cardImage);
 
-    const cardImageContext = cardImage.getContext('2d');
+    cardImageContext.strokeStyle = 'red';
     const croppedImageData = cardImageContext.getImageData(
+        imageBBox.left, 
+        imageBBox.top, 
+        Math.min(imageBBox.right - imageBBox.left, cardImage.width - imageBBox.left - 10),
+        Math.min(Math.min(imageBBox.bottom, 360) - imageBBox.top, cardImage.height - imageBBox.top - 10));
+
+    console.info( 
         imageBBox.top, 
         imageBBox.left, 
-        imageBBox.bottom - imageBBox.top + 10, 
-        imageBBox.right - imageBBox.left + 10);
+        Math.min(imageBBox.right - imageBBox.left, cardImage.width - imageBBox.left - 10),
+        Math.min(Math.min(imageBBox.bottom, 360) - imageBBox.top, cardImage.height - imageBBox.top - 10));
     
-    const scalingFactor = (imageBBox.bottom - imageBBox.top) / image.full.height;
-    cardImage.width = imageBBox.right - imageBBox.left;
-    cardImage.height = imageBBox.bottom - imageBBox.top;
+    cardImage.width = croppedImageData.width;
+    cardImage.height = croppedImageData.height;
 
+    cardImageContext.fillRect(0, 0, cardImage.width, cardImage.height);
     cardImageContext.putImageData(croppedImageData, 0, 0);
 };
 

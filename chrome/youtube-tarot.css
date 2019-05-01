@@ -51,6 +51,7 @@
     border-top-right-radius: 2%;
     height: 85%;
     left: 5%;
+    mix-blend-mode: hard-light;
     overflow: hidden;
     position: absolute;
     top: 3%;
