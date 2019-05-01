@@ -1,3 +1,5 @@
+const YOLO_MODEL_URL = chrome.runtime.getURL('models/yolo/model2.json');
+
 const DELAY_AFTER_IDLE = 0;
 const STYLE_RATIO = 0.1;
 const YOLO_CANVAS_SIZE = 416;
@@ -23,7 +25,7 @@ const loadStyleTransfer = () => {
     });
 };
 
-const defer = (fn, delay) => () => downloadModel().then(async m => {
+const defer = (fn, delay) => () => downloadModel(YOLO_MODEL_URL).then(async m => {
     model = m;
     console.log('downloaded Yolo model', m);
 
