@@ -1,0 +1,84 @@
+.tarot-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.tarot-card {
+    cursor: pointer;
+    display: block;
+    max-width: 90vw;
+    position: relative;
+    transform-origin: center center;
+    transform: scale3d(1, 1, 1);
+    transition: transform 250ms;
+    margin: 2%;
+    width: 96%;
+}
+
+@media screen and (min-width: 568px) {
+    .tarot-card {
+        margin: 2%;
+        width: 46%;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .tarot-card {
+        margin: 2%;
+        width: 29%;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .tarot-card {
+        margin: 2%;
+        width: 21%;
+    }
+}
+
+.tarot-card:hover {
+    transform: scale3d(1.1, 1.1, 1.1);
+}
+
+.tarot-bg {
+    width: 100%;
+}
+
+.tarot-image {
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+    height: 85%;
+    left: 5%;
+    overflow: hidden;
+    position: absolute;
+    top: 3%;
+    width: 90%;
+}
+
+.tarot-image canvas {
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    width: 100%;
+}
+
+.tarot-card__label {
+    color: black;
+    font-family: 'Ani', serif;
+    font-size: 20px;
+    left: 0;
+    margin: 0;
+    position: absolute;
+    text-align: center;
+    text-transform: uppercase;
+    bottom: 5.5%;
+    width: 100%;
+}
+
+@media screen and (min-width: 568px) {
+    .tarot-card__label {
+        font-size: 17px;
+    }
+}

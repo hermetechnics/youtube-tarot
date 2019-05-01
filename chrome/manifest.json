@@ -1,0 +1,32 @@
+{
+    "name": "YouTube Tarot",
+    "version": "1.0",
+    "description": "Makes you a tarot deck from your YouTube recommendations",
+    "manifest_version": 2,
+    "permissions": [ "activeTab" ],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://*.youtube.com/*"],
+            "js": [
+                "inkjet.min.js",
+                "tfjs-yolo-tiny.js",
+                "style-transfer.js",
+                "youtube-tarot.js"],
+            "css": ["youtube-tarot.css"]
+        }
+    ],
+    "web_accessible_resources": [
+        "tarot_frame.png", 
+        "tarot3_thesun.jpg",
+        "models/style/model.json", 
+        "models/style/group1-shard1of3",
+        "models/style/group1-shard2of3",
+        "models/style/group1-shard3of3",
+        "models/transformer/model.json",
+        "models/transformer/group1-shard1of1"
+    ]
+}

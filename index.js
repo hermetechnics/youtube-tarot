@@ -10,6 +10,9 @@ var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'youtube-nodejs-quickstart.json';
 
+const WAITE_DECK_SIZE = 78;
+const ACTIVITIES_PAGE_SIZE = 50;
+
 // Load client secrets from a local file.
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   if (err) {
@@ -17,7 +20,7 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     return;
   }
   // Authorize a client with the loaded credentials, then call the YouTube API.
-  authorize(JSON.parse(content), getChannel);
+  authorize(JSON.parse(content), getRecommendations);
 });
 
 /**
@@ -97,30 +100,47 @@ function storeToken(token) {
 }
 
 /**
- * Lists the names and IDs of up to 10 files.
+ * Grabs recommendations
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function getChannel(auth) {
-  var service = google.youtube('v3');
-  service.channels.list({
-    auth: auth,
-    part: 'snippet,contentDetails,statistics',
-    forUsername: 'GoogleDevelopers'
-  }, function(err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    var channels = response.data.items;
-    if (channels.length == 0) {
-      console.log('No channel found.');
-    } else {
-      console.log('This channel\'s ID is %s. Its title is \'%s\', and ' +
-                  'it has %s views.',
-                  channels[0].id,
-                  channels[0].snippet.title,
-                  channels[0].statistics.viewCount);
-    }
-  });
+function getRecommendations(auth) {
+  const service = google.youtube('v3');
+
+  const recommendations = [];
+  searchForRecommendations(auth, service, recommendations);
 }
+
+function searchForRecommendations(auth, service, found, pageToken) {
+    const query = {
+        auth,
+        part: 'snippet',
+        maxResults: ACTIVITIES_PAGE_SIZE,
+        mine: true
+    };
+
+    if (pageToken) {
+        console.log(`pageToken: ${pageToken}`);
+        query.pageToken = pageToken;
+    }
+
+    service.activities.list(query, function(err, response) {
+        if (err) {
+          console.log('The API returned an error: ' + err);
+          return;
+        }
+
+        const activities = response.data.items;
+        const recommendations = activities.filter(a => a.snippet.type === 'recommendation');
+        console.log(`found ${recommendations.length} recommendations`, activities.map(a => `${a.snippet.title} (${a.snippet.type})`));
+        found.push(...recommendations);
+
+        if (activities.length < ACTIVITIES_PAGE_SIZE) {
+            console.log(found);
+        } else if (found.length < WAITE_DECK_SIZE) {
+            searchForRecommendations(auth, service, found, response.data.nextPageToken);
+        } else {
+            console.log(found);
+        }
+      });
+};
