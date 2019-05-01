@@ -198,11 +198,15 @@ const renderTarotCard = async (container, recommendation) => {
 
     cardImageContext.fillRect(0, 0, cardImage.width, cardImage.height);
     cardImageContext.putImageData(croppedImageData, 0, 0);
+    cardContainer.classList.add('tarot-card--loaded');
+
+    return true;
 };
 
-const renderCards = async (container, recommendations) => {
+const renderCards = async (container, recommendations, loadingText) => {
     for (let rec of recommendations) {
         await renderTarotCard(container, rec);
+        loadingText.hidden = true;
     }
 };
 
@@ -222,5 +226,11 @@ window.requestIdleCallback(defer(() => {
     itemContainer.classList.add('tarot-container');
     recItems.forEach(item => itemContainer.removeChild(item));
 
-    renderCards(itemContainer, recommendations);
+    const loadingText = document.createElement('output');
+    loadingText.classList.add('tarot-loading');
+    loadingText.setAttribute('aria-role', 'status');
+    loadingText.innerText = 'Shuffling the deck';
+    container.insertBefore(loadingText, container.lastChild);
+
+    renderCards(itemContainer, recommendations, loadingText);
 }, DELAY_AFTER_IDLE));

@@ -5,16 +5,26 @@
     justify-content: center;
 }
 
+@keyframes scaleIn {
+    from { opacity: 0.8; transform: scale(0.8); } 
+    to { opacity: 1; transform: scale(1); } 
+}
+
 .tarot-card {
     cursor: pointer;
-    display: block;
+    display: none;
     max-width: 90vw;
     position: relative;
+    margin: 2%;
+    width: 96%;
+}
+
+.tarot-card--loaded {
+    animation: scaleIn 750ms;
+    display: block;
     transform-origin: center center;
     transform: scale3d(1, 1, 1);
     transition: transform 250ms;
-    margin: 2%;
-    width: 96%;
 }
 
 @media screen and (min-width: 568px) {
@@ -82,4 +92,11 @@
     .tarot-card__label {
         font-size: 17px;
     }
+}
+
+.tarot-loading {
+    display: block;
+    margin: 1em 0;
+    font-size: 20px; 
+    text-align: center;
 }
