@@ -1,7 +1,7 @@
 {
     "name": "YouTube Tarot",
-    "version": "1.0",
-    "description": "Makes you a tarot deck from your YouTube recommendations",
+    "version": "1.2",
+    "description": "Makes you a tarot deck from your YouTube recommendations.",
     "manifest_version": 2,
     "permissions": [ "activeTab" ],
     "background": {
@@ -19,10 +19,16 @@
             "css": ["youtube-tarot.css"]
         }
     ],
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
     "web_accessible_resources": [
-        "tarot_frame.png", 
+        "st.woff2",
+        "tarot_frame.png",
         "tarot3_thesun.jpg",
-        "models/style/model.json", 
+        "models/style/model.json",
         "models/style/group1-shard1of3",
         "models/style/group1-shard2of3",
         "models/style/group1-shard3of3",

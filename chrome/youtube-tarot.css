@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "Stonecross";
+    src: url("chrome-extension://__MSG_@@extension_id__/st.woff2") format("woff2");
+}
+
 .tarot-container {
     display: flex;
     flex-wrap: wrap;
@@ -6,8 +11,8 @@
 }
 
 @keyframes scaleIn {
-    from { opacity: 0.8; transform: scale(0.8); } 
-    to { opacity: 1; transform: scale(1); } 
+    from { opacity: 0.8; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .tarot-card {
@@ -77,7 +82,7 @@
 
 .tarot-card__label {
     color: black;
-    font-family: 'Ani', serif;
+    font-family: 'Stonecross', serif;
     font-size: 20px;
     left: 0;
     margin: 0;
@@ -90,6 +95,12 @@
 
 @media screen and (min-width: 568px) {
     .tarot-card__label {
+        font-size: 15px;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .tarot-card__label {
         font-size: 17px;
     }
 }
@@ -97,6 +108,6 @@
 .tarot-loading {
     display: block;
     margin: 1em 0;
-    font-size: 20px; 
+    font-size: 20px;
     text-align: center;
 }

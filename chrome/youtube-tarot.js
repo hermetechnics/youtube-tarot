@@ -10,11 +10,13 @@ let styleTransfer = null;
 const loadStyleTransfer = () => {
     return new Promise((res, rej) => {
         chrome.runtime.sendMessage(
-            { 
-                message: 'local_img_data', 
-                url: chrome.runtime.getURL('tarot3_thesun.jpg') 
-            }, 
+            {
+                message: 'local_img_data',
+                url: chrome.runtime.getURL('tarot3_thesun.jpg')
+            },
             (response) => {
+                if (!('data' in response)) console.log(response);
+
                 const { data, width, height } = response;
                 const imageData = new ImageData(Uint8ClampedArray.from(Object.values(data.data)), width, height);
                 res(new StyleTransfer(imageData, STYLE_RATIO));
@@ -67,7 +69,7 @@ const loadImage = async src => {
     const scalingFactor = YOLO_CANVAS_SIZE / height;
     scalingCanvas.width = width * scalingFactor;
     scalingCanvas.height = height * scalingFactor;
-    
+
     const context = scalingCanvas.getContext('2d');
     context.fillRect(0, 0, scalingCanvas.width, scalingCanvas.height);
     context.scale(scalingFactor, scalingFactor);
@@ -77,13 +79,15 @@ const loadImage = async src => {
 }
 
 const cropImage = (img) => {
-    const size = Math.min(img.shape[0], img.shape[1]);  
+    const size = Math.min(img.shape[0], img.shape[1]);
     const centerHeight = img.shape[0] / 2;
     const beginHeight = centerHeight - (size / 2);
     const centerWidth = img.shape[1] / 2;
     const beginWidth = centerWidth - (size / 2);
     return img.slice([beginHeight, beginWidth, 0], [size, size, 3]);
 }
+
+const pluralise = word => word + (/s$/.test(word) ? '' : 's');
 
 const numberToWord = [ 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen' ];
 
@@ -106,6 +110,16 @@ const yoloBBoxToImageBBox = (yoloBBox, width, height) => {
     };
 };
 
+const drawnCards = new Set();
+const hasBeenDrawn = (card) => {
+    if (drawnCards.has(card)) {
+        return true;
+    } else {
+        drawnCards.add(card);
+        return false;
+    }
+};
+
 const chooseObjects = (detectedObjects) => {
     const labels = detectedObjects.map(o => o.className);
     const labelHisto = labels.reduce((histo, label) => { histo[label] = (histo[label] || 0) + 1; return histo; }, {});
@@ -113,7 +127,7 @@ const chooseObjects = (detectedObjects) => {
 
     if (duplicate) {
         const [singleLabel, freq] = duplicate;
-        const label = `${numberToWord[freq - 1]} of ${singleLabel}s`;
+        const label = `${numberToWord[freq - 1]} of ${pluralise(singleLabel)}`;
 
         const chosenObjects = detectedObjects.filter(o => o.className === singleLabel);
         const bbox = chosenObjects.reduce(joinBoundingBoxes, chosenObjects[0]);
@@ -122,9 +136,12 @@ const chooseObjects = (detectedObjects) => {
 
     } else {
         let chosenObjects = detectedObjects.filter(_ => Math.random() > 0.5).slice(0, 2);
-        if (chosenObjects.length === 0) chosenObjects = [detectedObjects[0]];
 
-        let label = chosenObjects.map(o => o.className).join(' & ');
+        if (chosenObjects.length === 0) {
+            chosenObjects = [detectedObjects[0]];
+        }
+
+        let label = chosenObjects.map(o => o.className).join(' and ');
         if (!label.includes('&')) label = `the ${label}`;
 
         const bbox = chosenObjects.reduce(joinBoundingBoxes, chosenObjects[0]);
@@ -140,27 +157,28 @@ const renderTarotCard = async (container, recommendation) => {
     const detectedObjects = await yolo(tfImage, model);
 
     if (detectedObjects.length === 0) {
-        console.warn('No objects found in card');
+        console.info('No objects found in card');
         return;
     }
 
     const cardContainer = document.createElement('a');
     cardContainer.classList.add('tarot-card');
     cardContainer.href = recommendation.url;
-    
+
     const background = new Image();
     background.src = chrome.runtime.getURL('tarot_frame.png');
     background.classList.add('tarot-bg');
-    background.style.filter = 
+    background.style.filter =
         `saturate(${Math.random() * 60 + 80}%) hue-rotate(${Math.random() * 10 - 5}deg)`;
     cardContainer.appendChild(background);
 
     container.appendChild(cardContainer);
 
-    const [label, bbox] = chooseObjects(detectedObjects);  
-    console.log('YOLO BBOX', bbox);
+    const [label, bbox] = chooseObjects(detectedObjects);
+    if (hasBeenDrawn(label)) return;
+
     const imageBBox = yoloBBoxToImageBBox(bbox, image.full.width, image.full.height);
-    
+
     const cardLabel = document.createElement('h3');
     cardLabel.classList.add('tarot-card__label');
     cardLabel.innerText = label;
@@ -177,22 +195,22 @@ const renderTarotCard = async (container, recommendation) => {
 
     const cardImageContext = cardImage.getContext('2d');
     cardImageContext.fillRect(0, 0, cardImage.width, cardImage.height);
-    
+
     await styleTransfer.style(image.full, cardImage);
 
     cardImageContext.strokeStyle = 'red';
     const croppedImageData = cardImageContext.getImageData(
-        imageBBox.left, 
-        imageBBox.top, 
+        imageBBox.left,
+        imageBBox.top,
         Math.min(imageBBox.right - imageBBox.left, cardImage.width - imageBBox.left - 10),
         Math.min(Math.min(imageBBox.bottom, 360) - imageBBox.top, cardImage.height - imageBBox.top - 10));
 
-    console.info( 
-        imageBBox.top, 
-        imageBBox.left, 
+    console.info(
+        imageBBox.top,
+        imageBBox.left,
         Math.min(imageBBox.right - imageBBox.left, cardImage.width - imageBBox.left - 10),
         Math.min(Math.min(imageBBox.bottom, 360) - imageBBox.top, cardImage.height - imageBBox.top - 10));
-    
+
     cardImage.width = croppedImageData.width;
     cardImage.height = croppedImageData.height;
 
