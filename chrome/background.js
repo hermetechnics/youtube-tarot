@@ -14,8 +14,8 @@ chrome.runtime.onInstalled.addListener(function() {
                     sendResponse({
                         data: context.getImageData(0, 0, img.width, img.height),
                         width: img.width,
-                        height: img.height  
-                    }); 
+                        height: img.height
+                    });
                 });
 
                 img.src = request.url;

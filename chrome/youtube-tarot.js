@@ -15,7 +15,9 @@ const loadStyleTransfer = () => {
                 url: chrome.runtime.getURL('tarot3_thesun.jpg')
             },
             (response) => {
-                if (!('data' in response)) console.log(response);
+                if (!('data' in response)) {
+                    console.log(response);
+                }
 
                 const { data, width, height } = response;
                 const imageData = new ImageData(Uint8ClampedArray.from(Object.values(data.data)), width, height);
